@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead Dashboard</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;background:#f5f5f3;color:#1a1a1a;font-size:14px}
+  header{background:#fff;border-bottom:1px solid #e5e5e5;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+  header h1{font-size:16px;font-weight:600}
+  .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;margin-right:6px}
+  .status{font-size:12px;color:#888;display:flex;align-items:center}
+  main{max-width:1100px;margin:24px auto;padding:0 24px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+  .stat{background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #e5e5e5}
+  .stat-label{font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+  .stat-val{font-size:24px;font-weight:600}
+  .tabs{display:flex;gap:2px;margin-bottom:16px;border-bottom:1px solid #e5e5e5}
+  .tab{padding:8px 16px;font-size:13px;background:none;border:none;cursor:pointer;color:#888;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tab.active{color:#1a1a1a;border-bottom-color:#1a1a1a;font-weight:500}
+  .panel{display:none}.panel.active{display:block}
+  .card{background:#fff;border-radius:10px;border:1px solid #e5e5e5;overflow:hidden}
+  .add-row{display:flex;gap:8px;padding:14px 16px;border-bottom:1px solid #e5e5e5}
+  .add-row input{flex:1;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px}
+  .add-row button{padding:7px 14px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px}
+  .add-row button:hover{background:#333}
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;font-size:11px;color:#888;padding:10px 16px;border-bottom:1px solid #e5e5e5;text-transform:uppercase;letter-spacing:.04em;font-weight:500}
+  td{padding:11px 16px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#fafafa}
+  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+  .badge-green{background:#dcfce7;color:#166534}
+  .badge-blue{background:#dbeafe;color:#1e40af}
+  .badge-amber{background:#fef3c7;color:#92400e}
+  .del-btn{background:none;border:1px solid #fca5a5;color:#dc2626;padding:4px 10px;border-radius:5px;cursor:pointer;font-size:11px}
+  .del-btn:hover{background:#fee2e2}
+  .empty{text-align:center;padding:32px;color:#aaa;font-size:13px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Lead Dashboard</h1>
+  <span class="status"><span class="dot"></span>Bot active</span>
+</header>
+
+<main>
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Total leads</div><div class="stat-val" id="s-total">—</div></div>
+    <div class="stat"><div class="stat-label">Today</div><div class="stat-val" id="s-today">—</div></div>
+    <div class="stat"><div class="stat-label">Whitelist</div><div class="stat-val" id="s-white">—</div></div>
+    <div class="stat"><div class="stat-label">Blacklist</div><div class="stat-val" id="s-black">—</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="show('leads',this)">All leads</button>
+    <button class="tab" onclick="show('white',this)">Whitelist</button>
+    <button class="tab" onclick="show('black',this)">Blacklist</button>
+  </div>
+
+  <!-- Leads panel -->
+  <div id="panel-leads" class="panel active">
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Area</th>
+            <th>Budget</th>
+            <th>Intent</th>
+            <th>BHK</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="leads-body">
+          <tr><td colspan="7" class="empty">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Whitelist panel -->
+  <div id="panel-white" class="panel">
+    <div class="card">
+      <div class="add-row">
+        <input id="w-phone" placeholder="+91 98765 XXXXX">
+        <input id="w-note" placeholder="Name or note (e.g. Brother — Ramesh)">
+        <button onclick="addEntry('whitelist')">Add</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Phone</th><th>Note</th><th></th></tr>
+        </thead>
+        <tbody id="white-body">
+          <tr><td colspan="3" class="empty">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Blacklist panel -->
+  <div id="panel-black" class="panel">
+    <div class="card">
+      <div class="add-row">
+        <input id="b-phone" placeholder="+91 98765 XXXXX">
+        <input id="b-note" placeholder="Name or note (e.g. Finalized — 3BHK Apr 26)">
+        <button onclick="addEntry('blacklist')">Add</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Phone</th><th>Note</th><th></th></tr>
+        </thead>
+        <tbody id="black-body">
+          <tr><td colspan="3" class="empty">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script>
+function show(name, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+async function loadLeads() {
+  const res = await fetch('/api/leads');
+  const leads = await res.json();
+
+  document.getElementById('s-total').textContent = leads.length;
+
+  const todayStr = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+  const todayCount = leads.filter(l => l.timestamp && l.timestamp.startsWith(todayStr.slice(0,6))).length;
+  document.getElementById('s-today').textContent = todayCount;
+
+  const tbody = document.getElementById('leads-body');
+  if (!leads.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">No leads yet — waiting for the first customer!</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = leads.slice().reverse().map(l => `
+    <tr>
+      <td style="font-weight:500">${l.name || '—'}</td>
+      <td style="color:#666">${l.phone || '—'}</td>
+      <td>${l.area || '—'}</td>
+      <td style="font-weight:500">${l.budget || '—'}</td>
+      <td>${l.intent === 'Rent'
+        ? '<span class="badge badge-blue">Rent</span>'
+        : '<span class="badge badge-green">Buy</span>'}</td>
+      <td>${l.bhk || '—'}</td>
+      <td style="color:#888">${l.timestamp || '—'}</td>
+    </tr>
+  `).join('');
+}
+
+async function loadList(type) {
+  const res = await fetch('/api/' + type);
+  const items = await res.json();
+
+  const statId = type === 'whitelist' ? 's-white' : 's-black';
+  const bodyId = type === 'whitelist' ? 'white-body' : 'black-body';
+  document.getElementById(statId).textContent = items.length;
+
+  const tbody = document.getElementById(bodyId);
+  if (!items.length) {
+    tbody.innerHTML = '<tr><td colspan="3" class="empty">No entries yet</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = items.map(e => {
+    const phone = typeof e === 'object' ? e.phone : e;
+    const note  = typeof e === 'object' ? (e.note || '—') : '—';
+    return `
+      <tr>
+        <td style="font-weight:500">${phone}</td>
+        <td style="color:#666">${note}</td>
+        <td>
+          <button class="del-btn" onclick="removeEntry('${type}', '${phone}')">Remove</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function addEntry(type) {
+  const prefix = type === 'whitelist' ? 'w' : 'b';
+  const phone = document.getElementById(prefix + '-phone').value.trim();
+  const note  = document.getElementById(prefix + '-note').value.trim();
+  if (!phone) { alert('Please enter a phone number.'); return; }
+
+  await fetch('/api/' + type, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone, note })
+  });
+
+  document.getElementById(prefix + '-phone').value = '';
+  document.getElementById(prefix + '-note').value = '';
+  loadList(type);
+}
+
+async function removeEntry(type, phone) {
+  if (!confirm('Remove ' + phone + ' from ' + type + '?')) return;
+  await fetch('/api/' + type + '/' + encodeURIComponent(phone), { method: 'DELETE' });
+  loadList(type);
+}
+
+// Load everything on page open
+loadLeads();
+loadList('whitelist');
+loadList('blacklist');
+</script>
+
+</body>
+</html>
